@@ -114,7 +114,7 @@ It's a great way to learn.
 * [**R**: _Build A Cryptocurrency Trading Bot with R_](https://towardsdatascience.com/build-a-cryptocurrency-trading-bot-with-r-1445c429e1b1)
 * [**Rust**: _A bot for Starcraft in Rust, C or any other language_](https://habr.com/en/post/436254/)
 * [**Python**: _Simple Telegram Echo Bot (example)_](./bot/echo_bot.py)
-* [**Python**: _Crypto Market Bot (example)_](./bot/crypto_bot.py)
+* [**Python**: _Crypto Market Bot (Binance API example)_](./bot/crypto_bot.py)
 
 #### Build your own `Command-Line Tool`
 
@@ -158,7 +158,7 @@ It's a great way to learn.
 * [**Node.js / Express**: _Node.js E-commerce website on DigitalOcean_](https://www.digitalocean.com/community/tutorial-series/node-js-e-commerce-website)
 * [**React**: _Build an E-commerce Website with Next.js, Chakra UI & Stripe_](https://www.freecodecamp.org/news/how-to-build-an-e-commerce-website-with-nextjs-chakra-ui-stripe-react-hook-form/)
 * [**Node.js / Express**: _Build a Simple E-commerce Web App in Node and Express_](https://www.taniarascia.com/node-express-ecommerce/)
-* [**Python / Flask**: _Simple Flask E-commerce Example_](ecommerce/README.md)
+* [**Python / Flask**: _Simple Flask E-commerce Example (demo)_](ecommerce/README.md)
 
 #### Build your own `Emulator / Virtual Machine`
 

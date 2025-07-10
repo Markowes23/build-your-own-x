@@ -1,6 +1,6 @@
 # Simple Flask E-commerce Example
 
-This demo shows a tiny e-commerce backend built with Flask. It keeps a product catalog in memory and stores the shopping cart in the session.
+This demo shows a tiny e-commerce backend built with Flask. It keeps a product catalog in memory and stores the shopping cart in the session. For more background see the [Flask documentation](https://flask.palletsprojects.com/).
 
 ## Prerequisites
 - Python 3.8+

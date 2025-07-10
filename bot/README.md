@@ -33,4 +33,6 @@ export TELEGRAM_BOT_TOKEN=YOUR_TOKEN_HERE
 python crypto_bot.py
 ```
 
+Prices are retrieved from the [Binance public API](https://github.com/binance/binance-spot-api-docs). The trend prediction is a simple moving-average comparison and **not** financial advice.
+
 Use `/price BTC` to get the latest Bitcoin price, or `/predict ETH` for a basic trend prediction.

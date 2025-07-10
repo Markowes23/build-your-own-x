@@ -1,3 +1,16 @@
+"""Minimal but extendable crypto trading bot example.
+
+This script illustrates how ccxt can be combined with the freqtrade strategy
+interface.  It runs a simple EMA/RSI strategy and includes basic risk
+management.  Command line arguments allow you to tweak the trading symbol,
+timeframe and other settings without touching the code.
+
+Running it without API keys will operate in dry‑run mode and simply print the
+orders it would place.
+"""
+
+import argparse
+import os
 import ccxt
 import pandas as pd
 from typing import Dict
@@ -26,6 +39,34 @@ def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
     ma_down = down.ewm(com=period - 1, adjust=False).mean()
     rs = ma_up / ma_down
     return 100 - (100 / (1 + rs))
+
+
+def parse_args() -> argparse.Namespace:
+    """Return command line arguments."""
+    parser = argparse.ArgumentParser(description="Run the example trading bot")
+    parser.add_argument("--symbol", default="BTC/USDT",
+                        help="Trading pair to operate on")
+    parser.add_argument("--timeframe", default="5m",
+                        help="Candlestick timeframe")
+    parser.add_argument("--risk", type=float, default=0.01,
+                        help="Risk percentage per trade (0-1)")
+    parser.add_argument("--limit", type=int, default=100,
+                        help="Number of candles to fetch")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print orders instead of executing")
+    parser.add_argument("--cycles", type=int, default=1,
+                        help="Number of iterations to run")
+    return parser.parse_args()
+
+
+def get_exchange() -> ccxt.Exchange:
+    """Create a ccxt exchange instance using env vars if available."""
+    key = os.getenv("API_KEY")
+    secret = os.getenv("API_SECRET")
+    params = {"enableRateLimit": True}
+    if key and secret:
+        params.update({"apiKey": key, "secret": secret})
+    return ccxt.binance(params)
 
 
 class AdvancedStrategy(IStrategy):
@@ -84,28 +125,43 @@ def calculate_position_size(balance, risk_percent, price, stop_distance):
     return max(quantity, 0)
 
 
-def main():
-    exchange = ccxt.binance({'enableRateLimit': True})
-    symbol = 'BTC/USDT'
-    dataframe = fetch_candles(exchange, symbol)
+def run_cycle(exchange: ccxt.Exchange, strategy: AdvancedStrategy, args: argparse.Namespace) -> None:
+    """Fetch data, evaluate the strategy and optionally place orders."""
+    df = fetch_candles(exchange, args.symbol, args.timeframe, args.limit)
+    df = strategy.populate_indicators(df, metadata={})
+    df = strategy.populate_entry_trend(df, metadata={})
+    df = strategy.populate_exit_trend(df, metadata={})
 
-    strategy = AdvancedStrategy()
-    dataframe = strategy.populate_indicators(dataframe, metadata={})
-    dataframe = strategy.populate_entry_trend(dataframe, metadata={})
-    dataframe = strategy.populate_exit_trend(dataframe, metadata={})
-
-    last = dataframe.iloc[-1]
-    balance = exchange.fetch_balance()['free'].get('USDT', 0)
+    last = df.iloc[-1]
     price = last['close']
+    balance = exchange.fetch_balance().get('free', {}).get('USDT', 0)
 
     if last.get('enter_long'):
         stop_distance = price * abs(strategy.stoploss)
-        amount = calculate_position_size(balance, 0.01, price, stop_distance)
-        print(f"Buy signal. Would place order for {amount:.6f} {symbol} at {price}")
+        amount = calculate_position_size(balance, args.risk, price, stop_distance)
+        if args.dry_run or not exchange.apiKey:
+            print(f"Buy signal. Would place order for {amount:.6f} {args.symbol} at {price}")
+        else:
+            exchange.create_market_buy_order(args.symbol, amount)
+            print(f"Placed buy order for {amount:.6f} {args.symbol} at {price}")
     elif last.get('exit_long'):
-        print("Sell signal. Would exit position.")
+        if args.dry_run or not exchange.apiKey:
+            print("Sell signal. Would exit position.")
+        else:
+            exchange.create_market_sell_order(args.symbol, balance)
+            print("Placed sell order.")
     else:
         print("No trade signal.")
+
+
+def main() -> None:
+    """Entry point for running one or more trading cycles."""
+    args = parse_args()
+    exchange = get_exchange()
+    strategy = AdvancedStrategy()
+
+    for _ in range(args.cycles):
+        run_cycle(exchange, strategy, args)
 
 
 if __name__ == '__main__':

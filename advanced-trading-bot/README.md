@@ -18,3 +18,13 @@ pip install 'freqtrade[strategy]'
 ```
 
 The script also includes fallback indicator implementations so it can run without these optional dependencies, albeit with limited functionality.
+
+### Usage
+
+```bash
+python bot.py --symbol BTC/USDT --timeframe 5m --cycles 3 --dry-run
+```
+
+Set the environment variables `API_KEY` and `API_SECRET` if you want to place
+real orders. Without them (or with `--dry-run`) the bot only prints what it
+would do.

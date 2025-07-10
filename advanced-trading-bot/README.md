@@ -10,4 +10,11 @@ This example integrates [CCXT](https://github.com/ccxt/ccxt) for exchange access
 - Uses EMA crossover with RSI confirmation.
 - Demonstrates stop-loss, trailing stop, and dynamic position sizing.
 
-Run `bot.py` to see how components fit together. You will need to install `ccxt` and `freqtrade` (which requires TA-Lib).
+Run `bot.py` to see how components fit together. Install `ccxt` via `pip install ccxt`.
+If you want to use Freqtrade's built-in tools and TA‑Lib, install it with:
+
+```bash
+pip install 'freqtrade[strategy]'
+```
+
+The script also includes fallback indicator implementations so it can run without these optional dependencies, albeit with limited functionality.

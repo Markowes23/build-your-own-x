@@ -6,9 +6,26 @@ from typing import Dict
 try:
     from freqtrade.strategy.interface import IStrategy
     import talib.abstract as ta
-except ImportError:
+except ImportError:  # pragma: no cover - optional dependency
+    # Fallback when freqtrade or TA-Lib are not installed.
     IStrategy = object
     ta = None
+
+# Simple EMA/RSI implementations if TA-Lib is missing
+def _ema(series: pd.Series, period: int) -> pd.Series:
+    """Exponential moving average calculated with pandas."""
+    return series.ewm(span=period, adjust=False).mean()
+
+
+def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    """Relative Strength Index using pandas operations."""
+    delta = series.diff()
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    ma_up = up.ewm(com=period - 1, adjust=False).mean()
+    ma_down = down.ewm(com=period - 1, adjust=False).mean()
+    rs = ma_up / ma_down
+    return 100 - (100 / (1 + rs))
 
 
 class AdvancedStrategy(IStrategy):
@@ -23,12 +40,15 @@ class AdvancedStrategy(IStrategy):
     trailing_stop_positive_offset = 0.015
 
     def populate_indicators(self, dataframe: pd.DataFrame, metadata: Dict) -> pd.DataFrame:
-        if ta is None:
-            raise ImportError("TA-Lib not available. Install freqtrade with TA-Lib support.")
-
-        dataframe['ema_fast'] = ta.EMA(dataframe['close'], timeperiod=12)
-        dataframe['ema_slow'] = ta.EMA(dataframe['close'], timeperiod=26)
-        dataframe['rsi'] = ta.RSI(dataframe['close'], timeperiod=14)
+        """Add EMA and RSI columns using TA-Lib or pandas fallbacks."""
+        if ta is not None:
+            dataframe['ema_fast'] = ta.EMA(dataframe['close'], timeperiod=12)
+            dataframe['ema_slow'] = ta.EMA(dataframe['close'], timeperiod=26)
+            dataframe['rsi'] = ta.RSI(dataframe['close'], timeperiod=14)
+        else:
+            dataframe['ema_fast'] = _ema(dataframe['close'], 12)
+            dataframe['ema_slow'] = _ema(dataframe['close'], 26)
+            dataframe['rsi'] = _rsi(dataframe['close'], 14)
         return dataframe
 
     def populate_entry_trend(self, dataframe: pd.DataFrame, metadata: Dict) -> pd.DataFrame:

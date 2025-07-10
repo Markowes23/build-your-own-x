@@ -16,6 +16,7 @@ It's a great way to learn.
 * [Command-Line Tool](#build-your-own-command-line-tool)
 * [Database](#build-your-own-database)
 * [Docker](#build-your-own-docker)
+* [E-commerce Platform](#build-your-own-e-commerce-platform)
 * [Emulator / Virtual Machine](#build-your-own-emulator--virtual-machine)
 * [Front-end Framework / Library](#build-your-own-front-end-framework--library)
 * [Game](#build-your-own-game)
@@ -112,6 +113,7 @@ It's a great way to learn.
 * [**Python**: _Creating Reddit Bot with Python & PRAW_](https://www.youtube.com/playlist?list=PLIFBTFgFpoJ9vmYYlfxRFV6U_XhG-4fpP) [video]
 * [**R**: _Build A Cryptocurrency Trading Bot with R_](https://towardsdatascience.com/build-a-cryptocurrency-trading-bot-with-r-1445c429e1b1)
 * [**Rust**: _A bot for Starcraft in Rust, C or any other language_](https://habr.com/en/post/436254/)
+* [**Python**: _Simple Telegram Echo Bot (example)_](./bot/echo_bot.py)
 
 #### Build your own `Command-Line Tool`
 
@@ -149,6 +151,12 @@ It's a great way to learn.
 * [**Python**: _A workshop on Linux containers: Rebuild Docker from Scratch_](https://github.com/Fewbytes/rubber-docker)
 * [**Python**: _A proof-of-concept imitation of Docker, written in 100% Python_](https://github.com/tonybaloney/mocker)
 * [**Shell**: _Docker implemented in around 100 lines of bash_](https://github.com/p8952/bocker)
+#### Build your own `E-commerce Platform`
+
+* [**Django**: _Get Started With Django E-commerce_](https://realpython.com/get-started-with-django-ecommerce/)
+* [**Node.js / Express**: _Node.js E-commerce website on DigitalOcean_](https://www.digitalocean.com/community/tutorial-series/node-js-e-commerce-website)
+* [**React**: _Build an E-commerce Website with Next.js, Chakra UI & Stripe_](https://www.freecodecamp.org/news/how-to-build-an-e-commerce-website-with-nextjs-chakra-ui-stripe-react-hook-form/)
+* [**Node.js / Express**: _Build a Simple E-commerce Web App in Node and Express_](https://www.taniarascia.com/node-express-ecommerce/)
 
 #### Build your own `Emulator / Virtual Machine`
 

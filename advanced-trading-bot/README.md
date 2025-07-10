@@ -9,6 +9,8 @@ This example integrates [CCXT](https://github.com/ccxt/ccxt) for exchange access
 - Implements a strategy subclassing `freqtrade`'s `IStrategy`.
 - Uses EMA crossover with RSI confirmation.
 - Demonstrates stop-loss, trailing stop, and dynamic position sizing.
+- Uses ATR to size stop distance via `--stop-multiple` argument.
+- Logs executed or simulated trades to `trades.csv`.
 
 Run `bot.py` to see how components fit together. Install `ccxt` via `pip install ccxt`.
 If you want to use Freqtrade's built-in tools and TA‑Lib, install it with:
@@ -22,7 +24,7 @@ The script also includes fallback indicator implementations so it can run withou
 ### Usage
 
 ```bash
-python bot.py --symbol BTC/USDT --timeframe 5m --cycles 3 --dry-run
+python bot.py --symbol BTC/USDT --timeframe 5m --cycles 3 --stop-multiple 2 --dry-run
 ```
 
 Set the environment variables `API_KEY` and `API_SECRET` if you want to place

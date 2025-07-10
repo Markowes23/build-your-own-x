@@ -41,6 +41,20 @@ def _rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 
+def _atr(dataframe: pd.DataFrame, period: int = 14) -> pd.Series:
+    """Average True Range using pandas operations."""
+    high = dataframe['high']
+    low = dataframe['low']
+    close = dataframe['close']
+    prev_close = close.shift()
+    tr = pd.concat([
+        high - low,
+        (high - prev_close).abs(),
+        (low - prev_close).abs()
+    ], axis=1).max(axis=1)
+    return tr.rolling(period).mean()
+
+
 def parse_args() -> argparse.Namespace:
     """Return command line arguments."""
     parser = argparse.ArgumentParser(description="Run the example trading bot")
@@ -56,6 +70,8 @@ def parse_args() -> argparse.Namespace:
                         help="Print orders instead of executing")
     parser.add_argument("--cycles", type=int, default=1,
                         help="Number of iterations to run")
+    parser.add_argument("--stop-multiple", type=float, default=1.5,
+                        help="ATR multiple for stop distance")
     return parser.parse_args()
 
 
@@ -81,15 +97,17 @@ class AdvancedStrategy(IStrategy):
     trailing_stop_positive_offset = 0.015
 
     def populate_indicators(self, dataframe: pd.DataFrame, metadata: Dict) -> pd.DataFrame:
-        """Add EMA and RSI columns using TA-Lib or pandas fallbacks."""
+        """Add EMA, RSI and ATR columns using TA-Lib or pandas fallbacks."""
         if ta is not None:
             dataframe['ema_fast'] = ta.EMA(dataframe['close'], timeperiod=12)
             dataframe['ema_slow'] = ta.EMA(dataframe['close'], timeperiod=26)
             dataframe['rsi'] = ta.RSI(dataframe['close'], timeperiod=14)
+            dataframe['atr'] = ta.ATR(dataframe['high'], dataframe['low'], dataframe['close'], timeperiod=14)
         else:
             dataframe['ema_fast'] = _ema(dataframe['close'], 12)
             dataframe['ema_slow'] = _ema(dataframe['close'], 26)
             dataframe['rsi'] = _rsi(dataframe['close'], 14)
+            dataframe['atr'] = _atr(dataframe, 14)
         return dataframe
 
     def populate_entry_trend(self, dataframe: pd.DataFrame, metadata: Dict) -> pd.DataFrame:
@@ -125,6 +143,21 @@ def calculate_position_size(balance, risk_percent, price, stop_distance):
     return max(quantity, 0)
 
 
+def log_trade(action: str, amount: float, price: float, symbol: str) -> None:
+    """Append trade details to a CSV log."""
+    record = pd.DataFrame([
+        {
+            "timestamp": pd.Timestamp.utcnow().isoformat(),
+            "action": action,
+            "amount": amount,
+            "price": price,
+            "symbol": symbol,
+        }
+    ])
+    path = "trades.csv"
+    record.to_csv(path, mode="a", header=not os.path.exists(path), index=False)
+
+
 def run_cycle(exchange: ccxt.Exchange, strategy: AdvancedStrategy, args: argparse.Namespace) -> None:
     """Fetch data, evaluate the strategy and optionally place orders."""
     df = fetch_candles(exchange, args.symbol, args.timeframe, args.limit)
@@ -134,22 +167,27 @@ def run_cycle(exchange: ccxt.Exchange, strategy: AdvancedStrategy, args: argpars
 
     last = df.iloc[-1]
     price = last['close']
+    atr = last.get('atr', 0)
     balance = exchange.fetch_balance().get('free', {}).get('USDT', 0)
 
     if last.get('enter_long'):
-        stop_distance = price * abs(strategy.stoploss)
+        stop_distance = atr * args.stop_multiple if atr else price * abs(strategy.stoploss)
         amount = calculate_position_size(balance, args.risk, price, stop_distance)
         if args.dry_run or not exchange.apiKey:
             print(f"Buy signal. Would place order for {amount:.6f} {args.symbol} at {price}")
+            log_trade("BUY_SIM", amount, price, args.symbol)
         else:
             exchange.create_market_buy_order(args.symbol, amount)
             print(f"Placed buy order for {amount:.6f} {args.symbol} at {price}")
+            log_trade("BUY", amount, price, args.symbol)
     elif last.get('exit_long'):
         if args.dry_run or not exchange.apiKey:
             print("Sell signal. Would exit position.")
+            log_trade("SELL_SIM", balance, price, args.symbol)
         else:
             exchange.create_market_sell_order(args.symbol, balance)
             print("Placed sell order.")
+            log_trade("SELL", balance, price, args.symbol)
     else:
         print("No trade signal.")
 
